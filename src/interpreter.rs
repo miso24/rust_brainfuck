@@ -43,7 +43,6 @@ impl Interpreter {
 
     fn exec(&mut self, prog: &Program) -> Result<(), InterpreterError> {
         let mut pos = 0;
-        let mut buffer = Vec::new();
 
         while pos < prog.insts.len() {
             match prog.insts[pos] {
@@ -69,10 +68,9 @@ impl Interpreter {
                     }
                 },
                 Instruction::Read => {
-                    if buffer.is_empty() {
-                        stdin().read_exact(&mut buffer).unwrap();
-                    }
-                    self.stack[self.sp] = buffer.remove(0);
+                    let mut buffer = [0; 1];
+                    stdin().read_exact(&mut buffer).unwrap();
+                    self.stack[self.sp] = buffer[0];
                 },
                 Instruction::Write => print!("{}", self.stack[self.sp] as char),
                 Instruction::JumpToLBracket(idx) => {
