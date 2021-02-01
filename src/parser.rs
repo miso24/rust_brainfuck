@@ -59,7 +59,7 @@ impl Program {
 
 pub fn parse(tokens: &Vec<Token>) -> Result<Program, ParseError> {
     let mut pos = 0;
-    let mut op_pos = 0;
+    let mut inst_pos = 0;
     let mut bracket_stack = Vec::new();
     let mut bracket_id = 0;
 
