@@ -65,7 +65,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Program, ParseError> {
 
     let mut program = Program::new();
 
-    macro_rules! append_opt_operation {
+    macro_rules! append_opt_instruction {
         ($tok_kind:expr, $op_kind:expr) => {{
             let (num, _pos) = consume_many_tokens(&tokens, pos, $tok_kind);
             program.add_instruction($op_kind(num));
@@ -73,7 +73,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Program, ParseError> {
         }};
     }
 
-    macro_rules! append_operation {
+    macro_rules! append_instruction {
         ($op_kind:expr) => {{
             program.add_instruction($op_kind);
             pos += 1;
@@ -82,14 +82,14 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Program, ParseError> {
 
     while pos < tokens.len() {
         match tokens[pos] {
-            Token::Plus => append_opt_operation!(Token::Plus, Instruction::Add),
-            Token::Minus => append_opt_operation!(Token::Minus, Instruction::Sub),
-            Token::Greater => append_opt_operation!(Token::Greater, Instruction::SubPtr),
-            Token::Less => append_opt_operation!(Token::Less, Instruction::AddPtr),
-            Token::Period => append_operation!(Instruction::Write),
-            Token::Comma => append_operation!(Instruction::Read),
+            Token::Plus => append_opt_instruction!(Token::Plus, Instruction::Add),
+            Token::Minus => append_opt_instruction!(Token::Minus, Instruction::Sub),
+            Token::Greater => append_opt_instruction!(Token::Greater, Instruction::SubPtr),
+            Token::Less => append_opt_instruction!(Token::Less, Instruction::AddPtr),
+            Token::Period => append_instruction!(Instruction::Write),
+            Token::Comma => append_instruction!(Instruction::Read),
             Token::LBracket => {
-                program.add_lbracket(bracket_id, op_pos);
+                program.add_lbracket(bracket_id, inst_pos);
                 bracket_stack.push(bracket_id);
                 program.add_instruction(Instruction::JumpToRBracket(bracket_id));
                 bracket_id += 1;
@@ -98,7 +98,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Program, ParseError> {
             Token::RBracket => {
                 match bracket_stack.pop() {
                     Some(id) => {
-                        program.add_rbracket(id, op_pos);
+                        program.add_rbracket(id, inst_pos);
                         program.add_instruction(Instruction::JumpToLBracket(id));
                     }
                     None => return Err(ParseError::UnclosedBracket),
@@ -106,7 +106,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Program, ParseError> {
                 pos += 1;
             }
         }
-        op_pos += 1;
+        inst_pos += 1;
     }
 
     if !bracket_stack.is_empty() {
